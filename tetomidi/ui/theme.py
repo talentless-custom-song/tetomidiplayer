@@ -39,6 +39,7 @@ NOTE_PALETTES = {
     "green": ("#4aa86a", "#a0e8b8", "#56bb6b"),
     "pink": ("#b85a8c", "#f2aad0", "#d46aa5"),
     "amber": ("#b88a3a", "#f2d594", "#d9a441"),
+    "azure": ("#2b6fd6", "#9cc8ff", "#4c9bff"),   # bright blue for the falling notes
 }
 
 # mini player (colours from the reference screenshot: lime play button, dark round controls)
