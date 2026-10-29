@@ -32,7 +32,8 @@ DEFAULTS = {
     # fake keyboard sound: a typing click per key press, sent to an audio device (e.g. a virtual cable -> Roblox mic)
     "fakeSound": {"enabled": False, "volume": 80, "device": "", "alsoSpeakers": False},
     "roll": {"fallSeconds": 3.0, "glow": True, "keyLabels": True, "noteColor": "blue",
-             "background": "", "backgroundDim": 50},   # background: copied image file ("" = plain colour)
+             "background": "", "backgroundDim": 50,   # background: copied image file ("" = plain colour)
+             "piano3D": False},                       # piano roll only: perspective view (notes recede to the top)
     "piano": _common(
         **{
             "88Keys": True,
