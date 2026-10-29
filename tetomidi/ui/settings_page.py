@@ -138,6 +138,8 @@ class SettingsPage(tk.Frame):
         self._row(self.root_inner, "Fall time", self._slider("roll.fallSeconds", 1.0, 8.0, 0.5, "{:g} s"))
         self._row(self.root_inner, "Key glow", self._toggle("roll.glow"))
         self._row(self.root_inner, "Key letters (piano)", self._toggle("roll.keyLabels"))
+        self._row(self.root_inner, "3D piano roll", self._toggle("roll.piano3D"),
+                  hint="Piano roll only: the lanes and the falling notes recede into the distance, far notes are darker. Off = flat roll.")
         colors = list(theme.NOTE_PALETTES)
         self._row(self.root_inner, "Note color", lambda p: Stepper(
             p, [c.title() for c in colors], colors.index(self.cfg.get("roll.noteColor", "blue")) if self.cfg.get("roll.noteColor") in colors else 0,
