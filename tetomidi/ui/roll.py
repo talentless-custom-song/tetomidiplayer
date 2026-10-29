@@ -18,6 +18,8 @@ from .gfx import px
 
 MAX_NOTES_DRAWN = 700
 VEL_SHADES = 8
+PERSP_DEPTH = 3.0    # 3D piano roll: the top edge of the roll is this many times farther away than the keyboard
+DEPTH_FADE = 0.5     # 3D piano roll: how much far notes darken towards the background
 log = logging.getLogger(__name__)
 
 
@@ -127,6 +129,53 @@ class RollView(tk.Canvas):
                 self._bg_ph = None
         return self._bg_ph
 
+    # ----------------------------------------------------------- 3D perspective (piano roll only)
+    def _is3d(self) -> bool:
+        return self.mode == "piano" and bool(self.cfg.get("roll.piano3D", False))
+
+    def _horizon(self) -> float:
+        """Screen y of the vanishing line: chosen so the top edge of the roll lands on y = 0."""
+        return -self.hit / (PERSP_DEPTH - 1)
+
+    def _persp_y(self, z: float) -> float:
+        """Screen y of the depth ``z`` (1 = keyboard / hit line, PERSP_DEPTH = top edge)."""
+        yh = self._horizon()
+        return yh + (self.hit - yh) / z
+
+    def _persp_x(self, x: float, z: float) -> float:
+        """Screen x of the lane edge ``x`` (measured on the hit line) at depth ``z``: the lanes converge."""
+        cx = self.W / 2
+        return cx + (x - cx) / z
+
+    def _guide_line(self, x: float):
+        if self._is3d():
+            self.create_line(x, self.hit, self._persp_x(x, PERSP_DEPTH), 0, fill=theme.LANE_LINE)
+        else:
+            self.create_line(x, 0, x, self.hit, fill=theme.LANE_LINE)
+
+    def _note_box(self, rect, s, e, pos, look, pps, min_h, is3d):
+        """Canvas coordinates of one note: a rectangle (x0, y0, x1, y1), or in 3D the four corners of the
+        note's quad (bottom-left, bottom-right, top-right, top-left).  None when the note is off the top."""
+        if not is3d:
+            y1 = min(self.hit - (s - pos) * pps, self.hit)
+            y0 = max(self.hit - (e - pos) * pps, 0)
+            if y1 - y0 < min_h:
+                y0 = y1 - min_h
+            if y1 <= 0:
+                return None
+            return rect[0], y0, rect[1], y1
+        us = min(max((s - pos) / look, 0.0), 1.0)     # 0 = on the hit line, 1 = top edge of the roll
+        ue = min(max((e - pos) / look, 0.0), 1.0)
+        zs = 1 + us * (PERSP_DEPTH - 1)
+        ze = 1 + ue * (PERSP_DEPTH - 1)
+        ys, ye = self._persp_y(zs), self._persp_y(ze)
+        if ys - ye < min_h:
+            ye = ys - min_h
+        if ys <= 0:
+            return None
+        return (self._persp_x(rect[0], zs), ys, self._persp_x(rect[1], zs), ys,
+                self._persp_x(rect[1], ze), ye, self._persp_x(rect[0], ze), ye)
+
     def _glow_width(self) -> float:
         rects = list(self._lane_rect.values())
         return (rects[0][1] - rects[0][0]) if rects else px(20)
@@ -138,7 +187,7 @@ class RollView(tk.Canvas):
         wx = {p: i * ww for i, p in enumerate(whites)}
         for p in whites:                      # octave guide lines (before each C)
             if p % 12 == 0 and p != lo:
-                self.create_line(wx[p], 0, wx[p], self.hit, fill=theme.LANE_LINE)
+                self._guide_line(wx[p])
         for p in whites:
             self._lane_rect[p] = (wx[p] + 1, wx[p] + ww - 1)
             self._key_item[p] = self.create_rectangle(wx[p], self.hit, wx[p] + ww, self.H,
@@ -244,6 +293,7 @@ class RollView(tk.Canvas):
         pps = self.hit / look
         lo, hi = data.window(pos, look)
         use_vel = self.mode == "piano" and bool(self.cfg.get("piano.velocity", False))
+        is3d = self._is3d()
         lit: set[int] = set()
         used = 0
         starts, ends, lanes, vels = data.starts, data.ends, data.lanes, data.vels
@@ -255,24 +305,27 @@ class RollView(tk.Canvas):
             if rect is None:
                 continue
             s = starts[i]
-            y1 = min(self.hit - (s - pos) * pps, self.hit)
-            y0 = max(self.hit - (e - pos) * pps, 0)
             min_h = 3 if self.mode == "piano" else px(7)
-            if y1 - y0 < min_h:
-                y0 = y1 - min_h
-            if y1 <= 0:
+            box = self._note_box(rect, s, e, pos, look, pps, min_h, is3d)
+            if box is None:
                 continue
             active = s <= pos
             if active:
                 lit.add(lanes[i])
             fill = lit_col if active else (self._shade(min(vels[i] * VEL_SHADES // 128, VEL_SHADES - 1)) if use_vel else body)
+            if is3d and not active:   # the farther a note is, the darker it is
+                depth = min(max((s - pos) / look, 0.0), 1.0)
+                fill = gfx.mix(fill, theme.ROLL_BG, DEPTH_FADE * depth)
             if used == len(self._pool):
-                self._pool.append(self.create_rectangle(0, 0, 0, 0, fill=fill, outline=edge, width=1))
+                if is3d:
+                    self._pool.append(self.create_polygon(0, 0, 0, 0, 0, 0, 0, 0, fill=fill, outline=edge, width=1))
+                else:
+                    self._pool.append(self.create_rectangle(0, 0, 0, 0, fill=fill, outline=edge, width=1))
                 self._pool_fill.append(fill)
                 if self._caption_item is not None:   # new items are created on top: keep the text above the notes
                     self.tag_raise(self._caption_item)
             item = self._pool[used]
-            self.coords(item, rect[0], y0, rect[1], y1)
+            self.coords(item, *box)
             if self._pool_fill[used] != fill:
                 self.itemconfigure(item, fill=fill)
                 self._pool_fill[used] = fill
