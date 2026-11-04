@@ -1,7 +1,7 @@
 """Intro screen: logo, "tetoMIDI player" and an accent line reveal one after another, then the splash
 cross-fades into the main window (which stays fully invisible until then).
 
-Smoothness (v1.3): every fade step is rendered *before* the clock starts (no image building while it runs), the
+Smoothness: every fade step is rendered *before* the clock starts (no image building while it runs), the
 elements also glide up a few pixels while they fade in, the window alpha moves every frame, and the frame timer
 subtracts the time a frame took so the pace does not drift.
 """

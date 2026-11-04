@@ -1,5 +1,5 @@
 ; tetoMIDI Windows installer.  Build:
-;   makensis /DVERSION=1.3.0 /DSRC_DIR=C:\abs\dist\tetoMIDI /DOUT_FILE=C:\abs\dist\tetoMIDI-Setup.exe ^
+;   makensis /DVERSION=1.4.0 /DSRC_DIR=C:\abs\dist\tetoMIDI /DOUT_FILE=C:\abs\dist\tetoMIDI-Setup.exe ^
 ;            /DICON_FILE=C:\abs\assets\app.ico /DLICENSE_FILE=C:\abs\LICENSE packaging\windows\installer.nsi
 Unicode true
 !include "MUI2.nsh"

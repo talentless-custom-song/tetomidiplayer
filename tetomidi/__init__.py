@@ -4,8 +4,8 @@ Derived from nanoMIDIPlayer by NotHammer043 (GPL-3.0).
 """
 
 APP_NAME = "tetoMIDI"
-__version__ = "1.3.0"
-VERSION_LABEL = "v1.3"
+__version__ = "1.4.0"
+VERSION_LABEL = "v1.4"
 
 DISCORD_URL = "https://discord.gg/peaqm6uqgB"
 WEBSITE_URL = "https://tetomidi-pianits.vercel.app/"

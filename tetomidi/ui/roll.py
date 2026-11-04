@@ -44,6 +44,9 @@ class RollView(tk.Canvas):
         self._pool: list[int] = []
         self._pool_fill: list[str] = []
         self._pool_used = 0
+        self._extrusion_pool: list[tuple[int, int]] = []
+        self._extrusion_fill: list[tuple[str, str]] = []
+        self._extrusion_used = 0
         self._lane_rect: dict[int, tuple[float, float]] = {}
         self._key_item: dict[int, int] = {}
         self._key_base: dict[int, str] = {}
@@ -296,6 +299,7 @@ class RollView(tk.Canvas):
         is3d = self._is3d()
         lit: set[int] = set()
         used = 0
+        extrusion_used = 0
         starts, ends, lanes, vels = data.starts, data.ends, data.lanes, data.vels
         for i in range(lo, hi):
             e = ends[i]
@@ -316,6 +320,29 @@ class RollView(tk.Canvas):
             if is3d and not active:   # the farther a note is, the darker it is
                 depth = min(max((s - pos) / look, 0.0), 1.0)
                 fill = gfx.mix(fill, theme.ROLL_BG, DEPTH_FADE * depth)
+            if is3d:
+                x0, y0, x1, y1, x2, y2, x3, y3 = box
+                dx, dy = px(3), px(4)
+                faces = (
+                    (x0, y0, x1, y1, x1 + dx, y1 + dy, x0 + dx, y0 + dy),
+                    (x1, y1, x2, y2, x2 + dx, y2 + dy, x1 + dx, y1 + dy),
+                )
+                shades = (gfx.mix(fill, "#000000", 0.28), gfx.mix(fill, "#000000", 0.48))
+                if extrusion_used == len(self._extrusion_pool):
+                    items = tuple(self.create_polygon(*face, fill=color, outline=edge, width=1)
+                                  for face, color in zip(faces, shades))
+                    self._extrusion_pool.append(items)
+                    self._extrusion_fill.append(shades)
+                else:
+                    items = self._extrusion_pool[extrusion_used]
+                    if self._extrusion_fill[extrusion_used] != shades:
+                        for item, color in zip(items, shades):
+                            self.itemconfigure(item, fill=color)
+                        self._extrusion_fill[extrusion_used] = shades
+                for item, face in zip(items, faces):
+                    self.coords(item, *face)
+                    self.itemconfigure(item, state="normal")
+                extrusion_used += 1
             if used == len(self._pool):
                 if is3d:
                     self._pool.append(self.create_polygon(0, 0, 0, 0, 0, 0, 0, 0, fill=fill, outline=edge, width=1))
@@ -337,6 +364,10 @@ class RollView(tk.Canvas):
         for k in range(used, self._pool_used):
             self.itemconfigure(self._pool[k], state="hidden")
         self._pool_used = used
+        for i in range(extrusion_used, self._extrusion_used):
+            for item in self._extrusion_pool[i]:
+                self.itemconfigure(item, state="hidden")
+        self._extrusion_used = extrusion_used
 
         want_empty = len(data) == 0
         if want_empty != self._empty_shown:

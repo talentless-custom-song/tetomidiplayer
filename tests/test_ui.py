@@ -105,6 +105,21 @@ class UiTests(unittest.TestCase):
         self.assertEqual(len(page.roll.data), 40)
         self.assertEqual(page.time._text, "00:00:00/00:00:09")
 
+    def test_piano_roll_3d_setting_draws_extruded_notes(self):
+        page = self.app.pages["piano"]
+        page.load_path(self.piano_mid)
+        self.app.cfg.set("roll.piano3D", True)
+        self.app.root.update()
+        self.assertTrue(page.roll._is3d())
+        self.assertGreater(page.roll._pool_used, 0)
+        self.assertEqual(page.roll._extrusion_used, page.roll._pool_used)
+        self.assertEqual(page.roll.type(page.roll._pool[0]), "polygon")
+
+        self.app.cfg.set("roll.piano3D", False)
+        self.app.root.update()
+        self.assertFalse(page.roll._is3d())
+        self.assertEqual(page.roll.type(page.roll._pool[0]), "rectangle")
+
     # --- playback -----------------------------------------------------
     def test_play_pause_stop_buttons_and_roll_follow_the_clock(self):
         page = self.app.pages["piano"]

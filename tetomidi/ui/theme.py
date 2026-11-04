@@ -1,4 +1,4 @@
-"""Colors and palettes sampled from the tetoMIDI reference design (v1.2, unchanged in v1.3)."""
+"""Colors and palettes sampled from the tetoMIDI reference design."""
 
 PAGE_BG = "#f3f4f6"       # very light grey outside the app frame
 SIDEBAR_BG = "#000000"

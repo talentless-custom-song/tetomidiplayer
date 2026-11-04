@@ -139,7 +139,7 @@ class SettingsPage(tk.Frame):
         self._row(self.root_inner, "Key glow", self._toggle("roll.glow"))
         self._row(self.root_inner, "Key letters (piano)", self._toggle("roll.keyLabels"))
         self._row(self.root_inner, "3D piano roll", self._toggle("roll.piano3D"),
-                  hint="Piano roll only: the lanes and the falling notes recede into the distance, far notes are darker. Off = flat roll.")
+                  hint="Piano only: perspective lanes and notes with visible depth. Off = flat roll.")
         colors = list(theme.NOTE_PALETTES)
         self._row(self.root_inner, "Note color", lambda p: Stepper(
             p, [c.title() for c in colors], colors.index(self.cfg.get("roll.noteColor", "blue")) if self.cfg.get("roll.noteColor") in colors else 0,
@@ -166,8 +166,7 @@ class SettingsPage(tk.Frame):
 
         self._section("About")
         Label(self.root_inner, f"tetoMIDI {VERSION_LABEL}", size=18, color=theme.TEXT_SOFT, bg=theme.MAIN_BG).pack(anchor="w")
-        Label(self.root_inner, "Based on nanoMIDIPlayer by NotHammer043 · GNU GPL v3", size=15, color=theme.TEXT_MUTED,
-              bg=theme.MAIN_BG).pack(anchor="w", pady=(px(2), px(30)))
+        Label(self.root_inner, "MIDI macro player  |  GNU GPL v3", size=15, color=theme.TEXT_MUTED, bg=theme.MAIN_BG).pack(anchor="w", pady=(px(2), px(30)))
 
     # ------------------------------------------------ fake keyboard sound
     def _build_fake_sound(self):

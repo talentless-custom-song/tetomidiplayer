@@ -52,11 +52,15 @@ winpy scripts/build.py onedir
 
 echo "==> 6/7 Setup.exe with NSIS"
 VERSION="$(python3 -c "import re;print(re.search(r'__version__ = \"([^\"]+)\"', open('tetomidi/__init__.py').read()).group(1))")"
+LICENSE_FILE="$ROOT/LICENSE"
+if [ ! -f "$LICENSE_FILE" ]; then
+  LICENSE_FILE="/usr/share/common-licenses/GPL-3"
+fi
 mkdir -p build
 # NSIS on Linux treats '*.*' as 'files that contain a dot'; '*' takes everything
 sed 's/\*\.\*/*/' packaging/windows/installer.nsi > build/installer-linux.nsi
 makensis "-DVERSION=$VERSION" "-DSRC_DIR=$ROOT/dist/tetoMIDI" "-DOUT_FILE=$ROOT/dist/tetoMIDI-$VERSION-Setup.exe" \
-         "-DICON_FILE=$ROOT/assets/app.ico" "-DLICENSE_FILE=$ROOT/LICENSE" build/installer-linux.nsi
+         "-DICON_FILE=$ROOT/assets/app.ico" "-DLICENSE_FILE=$LICENSE_FILE" build/installer-linux.nsi
 mv -f dist/tetoMIDI-portable.exe "dist/tetoMIDI-$VERSION-portable.exe"
 
 echo "==> 7/7 done. Download these from the Explorer (right click -> Download):"

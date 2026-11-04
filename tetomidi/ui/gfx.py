@@ -126,6 +126,7 @@ def _glass(w: int, h: int, r: int, tint: str, gloss: float, shape: str = "rect")
     top = hex_to_rgb(mix(tint, "#ffffff", 0.10 + 0.16 * gloss)) + (255,)
     bot = hex_to_rgb(mix(tint, "#000000", 0.20)) + (255,)
     img = _vgrad(W, H, top, bot)
+    img.putalpha(Image.new("L", (W, H), round(255 * (0.78 + 0.12 * gloss))))
 
     inset = max(_SS * 2, int(min(w, h) * 0.07 * _SS))
     hl_h = int(H * 0.48)
